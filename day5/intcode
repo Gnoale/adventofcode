@@ -6,17 +6,62 @@ path = os.path.abspath('.')
 
 def read_intcode(intcode):
 
+# opcode 
+# 01 = +
+# 02 = *
+# 03 = store
+# 04 = print (always positional)
+
+# 0/1
+# 0 = position = use the  value stored at the @
+# 1 = immediate = use the @ as the value
+# 0/1
+# same as for parameter 1
+# 0/1
+# same as for parameter 1
+
     i = 0
 
     while i < len(intcode):
-        if intcode[i] == 99:
-            print(intcode[0])
-            return intcode[0]
-        elif intcode[i] == 1:
-            intcode[intcode[i+3]] = intcode[intcode[i+1]] + intcode[intcode[i+2]] 
-        elif intcode[i] == 2:   
-            intcode[intcode[i+3]] = intcode[intcode[i+1]] * intcode[intcode[i+2]]
-        i += 4
+
+        opcode = str(intcode[i])[-2:]
+        mode1 = str(intcode[i])[-3:-2]
+        mode2 = str(intcode[i])[-4:-3]
+        mode3 = str(intcode[i])[-5:-4]
+
+        if mode1: 
+            if mode1 == 0:
+                para1 = intcode[intcode[i+1]]
+            elif mode1 == 1:
+                para1 = intcode[i+1]
+        else:
+            para1 = intcode[intcode[i+1]]
+            para2 = intcode[intcode[i+2]]
+            para3 = intcode[intcode[i+3]]
+        
+        if mode2:
+            if mode2 == 0
+                para2 = intcode[intcode[i+2]]
+            elif mode2 == 1:
+                para2 = intcode[i+2]
+        else:
+            para2 = intcode[intcode[i+2]]
+            para3 = intcode[intcode[i+3]]
+
+        if mode3:
+            if mode3 == 0
+                para3 = intcode[intcode[i+3]]
+            elif mode3 == 1:
+                para3 = intcode[i+3]
+
+        if opcode == 99:
+            return
+        elif opcode == 01:
+            para3 = para1 + para2
+        elif opcode == 02:   
+            para3 = para1 * para2
+        elif opcode == 03:   
+        elif opcode == 02:   
         
 
 def bruteforce():

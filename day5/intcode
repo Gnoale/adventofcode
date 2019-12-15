@@ -4,93 +4,129 @@ import os
 
 path = os.path.abspath('.') 
 
-def read_intcode(intcode):
+def get_mode(intcode, i, mode1, mode2):
+    # how args would be handled
+    # return the 2 first parameters value
+    if mode1: 
+        if mode1 == "0":
+            p1 = intcode[intcode[i+1]]
+        elif mode1 == "1":
+            p1 = intcode[i+1]
+    else:
+        p1 = intcode[intcode[i+1]]
+        p2 = intcode[intcode[i+2]]
 
-# opcode 
-# 01 = +
-# 02 = *
-# 03 = store
-# 04 = print (always positional)
+    if mode2:
+        if mode2 == "0":
+            p2 = intcode[intcode[i+2]]
+        elif mode2 == "1":
+            p2 = intcode[i+2]
+    else:
+        p2 = intcode[intcode[i+2]]
+ 
+    return p1, p2
 
-# 0/1
-# 0 = position = use the  value stored at the @
-# 1 = immediate = use the @ as the value
-# 0/1
-# same as for parameter 1
-# 0/1
-# same as for parameter 1
 
+def read_intcode(intcode, _input):
+
+    # opcode
+    # 01 = +
+    # 02 = *
+    # 03 = store
+    # 04 = print (always positional)
+    
+    # 0/1
+    # 0 = position = use the  value stored at the @
+    # 1 = immediate = use the @ as the value
+    # 0/1
+    # same as for parameter 1
+    # 0/1
+    # same as for parameter 1
     i = 0
-
     while i < len(intcode):
 
         opcode = str(intcode[i])[-2:]
         mode1 = str(intcode[i])[-3:-2]
         mode2 = str(intcode[i])[-4:-3]
-        mode3 = str(intcode[i])[-5:-4]
+        para1 = para2 = None
+        print()
+        print("index, value : ", i, intcode[i])
+        print("opcode, mode1, mode2 : ", opcode, mode1, mode2)
 
-        if mode1: 
-            if mode1 == 0:
-                para1 = intcode[intcode[i+1]]
-            elif mode1 == 1:
-                para1 = intcode[i+1]
-        else:
-            para1 = intcode[intcode[i+1]]
-            para2 = intcode[intcode[i+2]]
-            para3 = intcode[intcode[i+3]]
-        
-        if mode2:
-            if mode2 == 0
-                para2 = intcode[intcode[i+2]]
-            elif mode2 == 1:
-                para2 = intcode[i+2]
-        else:
-            para2 = intcode[intcode[i+2]]
-            para3 = intcode[intcode[i+3]]
-
-        if mode3:
-            if mode3 == 0
-                para3 = intcode[intcode[i+3]]
-            elif mode3 == 1:
-                para3 = intcode[i+3]
-
-        if opcode == 99:
+        if opcode == "99":
             return
-        elif opcode == 01:
-            para3 = para1 + para2
-        elif opcode == 02:   
-            para3 = para1 * para2
-        elif opcode == 03:   
-        elif opcode == 02:   
+ 
+        # opcode operations
+        # add
+        elif opcode == "01" or opcode == "1":
+            print("add !")
+            para1, para2 = get_mode(intcode, i, mode1, mode2)
+            intcode[intcode[i+3]] = para1 + para2
+            i += 4
+        # multiply        
+        elif opcode == "02" or opcode == "2":   
+            print("multiply !")
+            para1, para2 = get_mode(intcode, i, mode1, mode2)
+            intcode[intcode[i+3]] = para1 * para2
+            i += 4
+        # store
+        elif opcode == "3" or opcode == "03":
+            print("store !")
+            para1 = intcode[i+1]
+            if i == 0:
+                intcode[intcode[i+1]] = _input 
+            i += 2
+        # print
+        elif opcode == "4" or opcode == "04":
+            para1 = intcode[intcode[i+1]]
+            print("Diag code = ",para1)
+            i += 2
+        # jump true
+        elif opcode == "05" or opcode == "5":
+            print("jump true !")
+            para1, para2 = get_mode(intcode, i, mode1, mode2)
+            if para1 != 0:
+                i = para2
+            else:
+                i += 3 
+        # jump false
+        elif opcode == "06" or opcode == "6":
+            print("jump false !")
+            para1, para2 = get_mode(intcode, i, mode1, mode2)
+            if para1 == 0:
+                i = para2
+            else:
+                i += 3
+        # less than
+        elif opcode == "07" or opcode == "7":
+            print("less than !")
+            para1, para2 = get_mode(intcode, i, mode1, mode2)
+            if para1 < para2:
+                intcode[intcode[i+3]] = 1
+            else:
+                intcode[intcode[i+3]] = 0
+            i += 4 
+        # equal
+        elif opcode == "08" or opcode == "8":
+            print("equal")
+            para1, para2 = get_mode(intcode, i, mode1, mode2)
+            if para1 == para2:
+                intcode[intcode[i+3]] = 1
+            else:
+                intcode[intcode[i+3]] = 0
+            i += 4
+
+        print("para1, para2 : ",para1, para2)
         
 
-def bruteforce():
-    
-    verb = [v for v in range(100)]
-    noon = [n for n in range(100)]
-    
-    k = [(n,v) for n in noon for v in verb]
+intcode = []
 
-    result = 0
-
-    i = 0
-    intcode = None
-    
-    while result != 19690720 and i < len(k):
-        
-        print(k[i])
-        intcode = [1,0,0,3,1,1,2,3,1,3,4,3,1,5,0,3,2,13,1,19,1,5,19,23,2,10,23,27,1,27,5,31,2,9,31,35,1,35,5,39,2,6,39,43,1,43,5,47,2,47,10,51,2,51,6,55,1,5,55,59,2,10,59,63,1,63,6,67,2,67,6,71,1,71,5,75,1,13,75,79,1,6,79,83,2,83,13,87,1,87,6,91,1,10,91,95,1,95,9,99,2,99,13,103,1,103,6,107,2,107,6,111,1,111,2,115,1,115,13,0,99,2,0,14,0]
-        intcode[1] = k[i][0]
-        intcode[2] = k[i][1]
-        print(intcode)
-        result = read_intcode(intcode)
-        i += 1
-    print(intcode, result)
-
-#test = [2,3,0,3,99]
-#test = [1,9,10,3,2,3,11,0,99,30,40,50]
-test = [2,4,4,5,99,0]
+with open(path+'/input', 'r') as f:
+    for l in f:
+        for i in l.split(','):
+            intcode.append(int(i))
 
 
-#read_intcode(intcode)
-bruteforce()
+
+print(len(intcode))
+read_intcode(intcode, 5)

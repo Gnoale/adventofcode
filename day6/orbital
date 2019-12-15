@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+
+# direct and indirect orbit
+# input list of direct orbit
+
+# dict of orbits
+# loop over, while value == key
+# n + 2
+# o grows as o += o+1
+
+# DAG 
+
+
+orbitals = []
+
+with open ('input', 'r') as f:
+    for e in f:
+        orbitals.append({e.split(')')[0] : e.split(')')[1].strip('\n')})
+#        orbitals[e.split(')')[0]] = e.split(')')[1].strip('\n') 
+        
+count = 0
+
+
+sorted_o = {}
+k = 0
+i = 0
+N = len(orbitals)
+print(N)
+
+while k < len(orbitals):
+    i = k
+    print(k)
+ #   print(sorted_o)
+    print()
+    while i < N:
+        if i == k:
+            valuei = [ov for ov in orbitals[i].values()][0]
+        j = 0
+        while j < N:
+            keyj =  [ok for ok in orbitals[j].keys()][0]
+            if keyj == valuei and keyj not in sorted_o.keys():
+                valuej = [ov for ov in orbitals[j].values()][0]
+                if i == k:
+                    keyi = [k for k in orbitals[i].keys()][0]
+                    sorted_o[keyi] = valuei
+                    sorted_o[keyj] = valuej
+                else:
+                    sorted_o[keyj] = valuej 
+                valuei = valuej
+                break
+            j += 1
+        i += 1
+    k += 1
+
+
+
+#count = 0
+#i = 0
+#while i < len(sorted_o):
+#    count += i+1
+#    i += 1

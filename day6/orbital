@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # direct and indirect orbit
 # input list of direct orbit
@@ -15,43 +15,70 @@ orbitals = []
 
 with open ('input', 'r') as f:
     for e in f:
-        orbitals.append({e.split(')')[0] : e.split(')')[1].strip('\n')})
+        orbitals += [[e.split(')')[0]] + [e.split(')')[1].strip('\n')]]
 #        orbitals[e.split(')')[0]] = e.split(')')[1].strip('\n') 
-        
-count = 0
 
 
-sorted_o = {}
-k = 0
-i = 0
+orbitals = [
+    ['COM','B'],
+    ['B','C'],
+    ['C','D'],
+    ['D','E'],
+    ['E','F'],
+    ['B','G'],
+    ['G','H'],
+    ['D','I'],
+    ['E','J'],
+    ['J','K'],
+    ['K','L']
+]
+
 N = len(orbitals)
-print(N)
+i = j = k = 0
+graphs = [0]*N
 
-while k < len(orbitals):
-    i = k
-    print(k)
- #   print(sorted_o)
-    print()
-    while i < N:
-        if i == k:
-            valuei = [ov for ov in orbitals[i].values()][0]
-        j = 0
-        while j < N:
-            keyj =  [ok for ok in orbitals[j].keys()][0]
-            if keyj == valuei and keyj not in sorted_o.keys():
-                valuej = [ov for ov in orbitals[j].values()][0]
-                if i == k:
-                    keyi = [k for k in orbitals[i].keys()][0]
-                    sorted_o[keyi] = valuei
-                    sorted_o[keyj] = valuej
-                else:
-                    sorted_o[keyj] = valuej 
-                valuei = valuej
-                break
-            j += 1
-        i += 1
-    k += 1
+while i < N:
+    # i -> ['COM', 'B']
+    planeti = orbitals[i][0]
+    orbiti = orbitals[i][1]
+    j = 0
+    match = 0
+    while j < N:
+        # j -> ['B', 'C']
+        planetj = orbitals[j][0]
+        orbitj = orbitals[j][1]
+#        print("pi = {}, oi = {}, pj = {}, oj = {}, i = {}, j = {}".format(planeti, orbiti, planetj, orbitj, i, j))
+        if planetj == orbiti:
+            # graphs = [ ['COM', 'B'] ]
+            if match == 0:
+                graphs[i] = [planeti, orbiti]
+            match += 1
+            # graphs = [ ['COM', 'B', 'C'] ]
+            graphs[i] += [orbitj]
+            orbiti = orbitj
+        j += 1
+    i += 1
 
+s = 0
+for e in graphs:
+    print(e)
+
+sgraphs = []
+
+#for o in orbitals:
+#    glen = 0
+#    l = []
+#    print(o[0])
+#    for g in graphs:
+#        if o[0] in g:
+#            if len(g) > glen:
+#                glen = len(g)
+#                l = g
+#    for e in sgraphs:
+#        if len(l) > 1 and o not in sgraphs[0]:
+#            sgraphs.append(l)
+#
+#print(len(sgraphs), len(graphs))
 
 
 #count = 0

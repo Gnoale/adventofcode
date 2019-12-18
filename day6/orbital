@@ -1,88 +1,131 @@
 #!/usr/bin/env python3
 
-# direct and indirect orbit
-# input list of direct orbit
-
-# dict of orbits
-# loop over, while value == key
-# n + 2
-# o grows as o += o+1
-
-# DAG 
-
-
 orbitals = []
 
 with open ('input', 'r') as f:
     for e in f:
-        orbitals += [[e.split(')')[0]] + [e.split(')')[1].strip('\n')]]
-#        orbitals[e.split(')')[0]] = e.split(')')[1].strip('\n') 
+#        orbitals += [[e.split(')')[0]] + [e.split(')')[1].strip('\n')]]
+        orbitals[e.split(')')[0]] = e.split(')')[1].strip('\n') 
+
+orbitals = [ 
+    'C','D',
+    'B','C',
+    'D','E',
+    'B','G',
+    'E','F',
+    'G','H',
+    'D','I',
+    'E','J',
+    'J','K',
+    'COM','B',
+    'K','L'
+    ]
 
 
-orbitals = [
-    ['COM','B'],
-    ['B','C'],
-    ['C','D'],
-    ['D','E'],
-    ['E','F'],
-    ['B','G'],
-    ['G','H'],
-    ['D','I'],
-    ['E','J'],
-    ['J','K'],
-    ['K','L']
-]
+graphs = []
 
+# sort items
+
+# get main graph
 N = len(orbitals)
-i = j = k = 0
-graphs = [0]*N
+i = j =  0
+root = []
+while i > N:
+    pi = orbitals[i][0]
+    oi = orbitals[i][1]
+    if pi == "COM":
+        root = [orbitals[i]]
+        while j < N:
+            pj = orbitals[j][0]
+            oj = orbitals[j][1]
+            # next graph object
+            if pj == oi:
+                root += [orbitals[j]]
+                oi = oj
+            j += 1
+        break
+    i -= 1
 
-while i < N:
-    # i -> ['COM', 'B']
-    planeti = orbitals[i][0]
-    orbiti = orbitals[i][1]
+graphs += [root]
+
+# explore other branchs from main root graph
+Nr = len(root)
+i = 1
+j = 0
+g = [root[0]]
+while i < Nr:
+    pi = root[i][0]
+    oi = root[i][1]
+    match = False
     j = 0
-    match = 0
     while j < N:
-        # j -> ['B', 'C']
-        planetj = orbitals[j][0]
-        orbitj = orbitals[j][1]
-#        print("pi = {}, oi = {}, pj = {}, oj = {}, i = {}, j = {}".format(planeti, orbiti, planetj, orbitj, i, j))
-        if planetj == orbiti:
-            # graphs = [ ['COM', 'B'] ]
-            if match == 0:
-                graphs[i] = [planeti, orbiti]
-            match += 1
-            # graphs = [ ['COM', 'B', 'C'] ]
-            graphs[i] += [orbitj]
-            orbiti = orbitj
+        pj = orbitals[j][0]
+        oj = orbitals[j][1]
+        # next graph object for each o
+        if not match:
+            if pj == pi and oj != oi:
+                g += [orbitals[j]]
+                oi = oj
+                match = True
+        else:
+            if pj == oi:
+                g += [orbitals[j]]
+                oi = oj
         j += 1
+    if match:
+        graphs += [g]
+    g = root[0:i]
+    g += [root[i]]
     i += 1
 
-s = 0
 for e in graphs:
     print(e)
+print()
 
-sgraphs = []
+# DR = k - 1 
+# compute cardinality K
 
-#for o in orbitals:
-#    glen = 0
-#    l = []
-#    print(o[0])
-#    for g in graphs:
-#        if o[0] in g:
-#            if len(g) > glen:
-#                glen = len(g)
-#                l = g
-#    for e in sgraphs:
-#        if len(l) > 1 and o not in sgraphs[0]:
-#            sgraphs.append(l)
-#
-#print(len(sgraphs), len(graphs))
+k = {}
+for g in graphs:
+    for o in g:
+        k[o[0]] = 1
+        k [o[1]] = 1
 
+keys = [k for k in k.keys()]
+DR = len(keys)-1
+print(keys)
+print("DR = ",DR)
+print()
 
-#count = 0
-#i = 0
-#while i < len(sorted_o):
-#    count += i+1
-#    i += 1
+# IR = n-2 + n-3 + n-n if n < 2
+
+IR = {}
+for k in keys:
+    if k != "COM":
+        IR[k] = 0
+
+print(IR)
+
+for k,v in IR.items():
+    for g in graphs:
+        i = len(g)-1
+        # scan the graph from the end
+        match =  False
+        while i >= 1:
+            if match:
+                IR[k] += 1
+            # if k == orbit and it hasn't already been counted
+            # since k could be from the main graphs 
+            if k == g[i][1] and IR[k] == 0 :
+                match = True
+                IR[k] += 1
+            i -= 1
+
+print(IR)
+
+total = DR
+
+for k, v in IR.items():
+    total += v
+
+print("Total direct and indirect relations is {}.".format(total))

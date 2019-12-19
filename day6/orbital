@@ -1,131 +1,63 @@
 #!/usr/bin/env python3
+from collections import defaultdict
 
 orbitals = []
 
-with open ('input', 'r') as f:
+with open('input', 'r') as f:
     for e in f:
 #        orbitals += [[e.split(')')[0]] + [e.split(')')[1].strip('\n')]]
-        orbitals[e.split(')')[0]] = e.split(')')[1].strip('\n') 
+        orbitals.append((e.split(')')[0], e.split(')')[1].strip('\n'))) 
+#print(orbitals)
+#orbitals = [ 
+#    ('C','D'),
+#    ('B','C'),
+#    ('D','E'),
+#    ('B','G'),
+#    ('E','F'),
+#    ('G','H'),
+#    ('D','I'),
+#    ('E','J'),
+#    ('J','K'),
+#    ('COM','B'),
+#    ('K','L')
+#    ]
 
-orbitals = [ 
-    'C','D',
-    'B','C',
-    'D','E',
-    'B','G',
-    'E','F',
-    'G','H',
-    'D','I',
-    'E','J',
-    'J','K',
-    'COM','B',
-    'K','L'
-    ]
+graph = defaultdict(list)
 
 
-graphs = []
+for k, v in orbitals:
+    graph[k].append(v)
 
-# sort items
 
-# get main graph
-N = len(orbitals)
-i = j =  0
-root = []
-while i > N:
-    pi = orbitals[i][0]
-    oi = orbitals[i][1]
-    if pi == "COM":
-        root = [orbitals[i]]
-        while j < N:
-            pj = orbitals[j][0]
-            oj = orbitals[j][1]
-            # next graph object
-            if pj == oi:
-                root += [orbitals[j]]
-                oi = oj
-            j += 1
-        break
-    i -= 1
+# {'C': ['D'], 'B': ['C', 'G'], 'D': ['E', 'I'], 'E': ['F', 'J'], 'G': ['H'], 'J': ['K'], 'COM': ['B'], 'K': ['L']})
 
-graphs += [root]
+queue = []
+visited = []
+level = {}
 
-# explore other branchs from main root graph
-Nr = len(root)
-i = 1
-j = 0
-g = [root[0]]
-while i < Nr:
-    pi = root[i][0]
-    oi = root[i][1]
-    match = False
-    j = 0
-    while j < N:
-        pj = orbitals[j][0]
-        oj = orbitals[j][1]
-        # next graph object for each o
-        if not match:
-            if pj == pi and oj != oi:
-                g += [orbitals[j]]
-                oi = oj
-                match = True
-        else:
-            if pj == oi:
-                g += [orbitals[j]]
-                oi = oj
-        j += 1
-    if match:
-        graphs += [g]
-    g = root[0:i]
-    g += [root[i]]
-    i += 1
+def traverse_graph(node, graph):
+    
+    queue.append(node)
+    visited.append(node)
+    level[node] = 0
 
-for e in graphs:
-    print(e)
-print()
+    while len(queue) > 0:
+        print("Visited : ",visited)
+        node = queue[0]
+        queue.pop(0)
+        next_nodes = graph[node]
+        
+        for n in next_nodes:
+            level[n] = level[node] + 1 
+            if n not in visited:
+                queue.append(n)
+                visited.append(n)
 
-# DR = k - 1 
-# compute cardinality K
+traverse_graph('COM', graph)
+print(level)
 
-k = {}
-for g in graphs:
-    for o in g:
-        k[o[0]] = 1
-        k [o[1]] = 1
+O = 0
+for k, v in level.items():
+    O += v
 
-keys = [k for k in k.keys()]
-DR = len(keys)-1
-print(keys)
-print("DR = ",DR)
-print()
-
-# IR = n-2 + n-3 + n-n if n < 2
-
-IR = {}
-for k in keys:
-    if k != "COM":
-        IR[k] = 0
-
-print(IR)
-
-for k,v in IR.items():
-    for g in graphs:
-        i = len(g)-1
-        # scan the graph from the end
-        match =  False
-        while i >= 1:
-            if match:
-                IR[k] += 1
-            # if k == orbit and it hasn't already been counted
-            # since k could be from the main graphs 
-            if k == g[i][1] and IR[k] == 0 :
-                match = True
-                IR[k] += 1
-            i -= 1
-
-print(IR)
-
-total = DR
-
-for k, v in IR.items():
-    total += v
-
-print("Total direct and indirect relations is {}.".format(total))
+print(O)

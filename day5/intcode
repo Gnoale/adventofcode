@@ -7,82 +7,62 @@ path = os.path.abspath('.')
 def get_mode(intcode, i, mode1, mode2):
     # how args would be handled
     # return the 2 first parameters value
-    if mode1: 
-        if mode1 == "0":
-            p1 = intcode[intcode[i+1]]
-        elif mode1 == "1":
-            p1 = intcode[i+1]
-    else:
+    if mode1 == 0:
         p1 = intcode[intcode[i+1]]
+    elif mode1 == 1:
+        p1 = intcode[i+1]
+    
+    if mode2 == 0:
         p2 = intcode[intcode[i+2]]
-
-    if mode2:
-        if mode2 == "0":
-            p2 = intcode[intcode[i+2]]
-        elif mode2 == "1":
-            p2 = intcode[i+2]
-    else:
-        p2 = intcode[intcode[i+2]]
+    elif mode2 == 1:
+        p2 = intcode[i+2]
  
     return p1, p2
 
 
 def read_intcode(intcode, _input):
 
-    # opcode
-    # 01 = +
-    # 02 = *
-    # 03 = store
-    # 04 = print (always positional)
-    
-    # 0/1
-    # 0 = position = use the  value stored at the @
-    # 1 = immediate = use the @ as the value
-    # 0/1
-    # same as for parameter 1
-    # 0/1
-    # same as for parameter 1
     i = 0
     while i < len(intcode):
 
-        opcode = str(intcode[i])[-2:]
-        mode1 = str(intcode[i])[-3:-2]
-        mode2 = str(intcode[i])[-4:-3]
+        opcode = intcode[i]%100
+        mode1 = intcode[i]%1000//100
+        mode2 = intcode[i]//1000
         para1 = para2 = None
         print()
         print("index, value : ", i, intcode[i])
         print("opcode, mode1, mode2 : ", opcode, mode1, mode2)
-
-        if opcode == "99":
+        
+        if opcode == 99:
             return
  
         # opcode operations
         # add
-        elif opcode == "01" or opcode == "1":
+        elif opcode == 1:
             print("add !")
             para1, para2 = get_mode(intcode, i, mode1, mode2)
             intcode[intcode[i+3]] = para1 + para2
             i += 4
         # multiply        
-        elif opcode == "02" or opcode == "2":   
+        elif opcode == 2: 
             print("multiply !")
             para1, para2 = get_mode(intcode, i, mode1, mode2)
             intcode[intcode[i+3]] = para1 * para2
             i += 4
         # store
-        elif opcode == "3" or opcode == "03":
+        elif opcode == 3:
             print("store !")
             para1 = intcode[i+1]
             if i == 0:
                 intcode[intcode[i+1]] = _input 
             i += 2
         # print
-        elif opcode == "4" or opcode == "04":
+        elif opcode == 4:
             para1 = intcode[intcode[i+1]]
             print("Diag code = ",para1)
             i += 2
         # jump true
-        elif opcode == "05" or opcode == "5":
+        elif opcode == 5:
             print("jump true !")
             para1, para2 = get_mode(intcode, i, mode1, mode2)
             if para1 != 0:
@@ -90,7 +70,7 @@ def read_intcode(intcode, _input):
             else:
                 i += 3 
         # jump false
-        elif opcode == "06" or opcode == "6":
+        elif opcode == 6:
             print("jump false !")
             para1, para2 = get_mode(intcode, i, mode1, mode2)
             if para1 == 0:
@@ -98,7 +78,7 @@ def read_intcode(intcode, _input):
             else:
                 i += 3
         # less than
-        elif opcode == "07" or opcode == "7":
+        elif opcode == 7:
             print("less than !")
             para1, para2 = get_mode(intcode, i, mode1, mode2)
             if para1 < para2:
@@ -107,7 +87,7 @@ def read_intcode(intcode, _input):
                 intcode[intcode[i+3]] = 0
             i += 4 
         # equal
-        elif opcode == "08" or opcode == "8":
+        elif opcode == 8:
             print("equal")
             para1, para2 = get_mode(intcode, i, mode1, mode2)
             if para1 == para2:

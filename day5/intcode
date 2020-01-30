@@ -2,111 +2,130 @@
 
 import os
 
-path = os.path.abspath('.') 
+class Intcode():
 
-def get_mode(intcode, i, mode1, mode2):
-    # how args would be handled
-    # return the 2 first parameters value
-    if mode1 == 0:
-        p1 = intcode[intcode[i+1]]
-    elif mode1 == 1:
-        p1 = intcode[i+1]
+    def __init__(self, data, start):
+        self.run = data # the intcode list
+        self.start = start # the first parameter
+        self.pointer = 0
+        self.opcode = None
+        self.para1 = None
+        self.para2 = None
+        self.mode1 = None
+        self.mode2 = None
+
+    def setOpmode(self):
+        # Instructions are potentially 5 digits integers (10000)
+        # Opcode is 2 last digits (DE)
+        # Mode1 (C) and Mode2 (B) are either 0 or 1, respectfully 3rd and 4th digits
+        # Example
+        # ABCDE
+        #  1002
+        opcodes = {
+            1:"add",
+            2:"mult",
+            3:"store",
+            4:"diag",
+            5:"jumpt",
+            6:"jumpf",
+            7:"less",
+            8:"equal",
+            99:"exit"
+        }
+        self.opcode = opcodes[self.run[self.pointer]%100]
+        self.mode1 = self.run[self.pointer]%1000//100
+        self.mode2 = self.run[self.pointer]//1000
+        # Mode 3 is not implemented yet
+
+    def setParameters(self):
+        if self.mode1 == 0:
+            self.para1 = self.run[self.run[self.pointer+1]]
+        elif self.mode1 == 1:
+            self.para1 = self.run[self.pointer+1]
+        if self.mode2 == 0:
+            self.para2 = self.run[self.run[self.pointer+2]]
+        elif self.mode2 == 1:
+            self.para2 = self.run[self.pointer+2]
+
+    def opAdd(self):
+        self.run[self.run[self.pointer+3]] = self.para1 + self.para2
+        self.pointer += 4
+
+    def opMult(self):
+        self.run[self.run[self.pointer+3]] = self.para1 * self.para2
+        self.pointer += 4
+
+    def opStore(self):
+        self.run[self.run[self.pointer+1]] = self.start
+        self.pointer += 2
+
+    def opDiag(self):
+        print("Diagnostic Code",self.run[self.run[self.pointer+1]])
+        self.pointer += 2
+
+    def opJumpf(self):
+        if self.para1 == 0:
+            self.pointer = self.para2
+        else:
+            self.pointer += 3
+
+    def opJumpt(self):
+        if self.para1 != 0:
+            self.pointer = self.para2
+        else:
+            self.pointer += 3
     
-    if mode2 == 0:
-        p2 = intcode[intcode[i+2]]
-    elif mode2 == 1:
-        p2 = intcode[i+2]
- 
-    return p1, p2
+    def opLess(self):
+        if self.para1 < self.para2:
+            self.run[self.run[self.pointer+3]] = 1
+        else:
+            self.run[self.run[self.pointer+3]] = 0
+        self.pointer += 4  
+
+    def opEqual(self):
+        if self.para1 == self.para2:
+            self.run[self.run[self.pointer+3]] = 1
+        else:
+            self.run[self.run[self.pointer+3]] = 0
+        self.pointer += 4
+
+    # run the intcode
+    def opRun(self):
+        # These case doesn't use the parameters retrieval
+        nopara = ["store", "diag", "exit"]
+        while self.pointer < len(self.run):
+            self.setOpmode()
+            # Avoid list index out of range exception
+            if self.opcode not in nopara:
+                self.setParameters()
+            if self.opcode == "add":
+                self.opAdd()
+            elif self.opcode == "mult":
+                self.opMult()
+            elif self.opcode == "store":
+                self.opStore()
+            elif self.opcode == "diag":
+                self.opDiag()
+            elif self.opcode == "jumpt":
+                self.opJumpt()
+            elif self.opcode == "jumpf":
+                self.opJumpf()
+            elif self.opcode == "less":
+                self.opLess()
+            elif self.opcode == "equal":
+                self.opEqual()
+            elif self.opcode == "exit":
+                return
 
 
-def read_intcode(intcode, _input):
+if __name__=='__main__':
+    
+    path = os.path.abspath('.') 
+    data = []
+    with open(path+'/input', 'r') as f:
+        for l in f:
+            for i in l.split(','):
+                data.append(int(i))
 
-    i = 0
-    while i < len(intcode):
-
-        opcode = intcode[i]%100
-        mode1 = intcode[i]%1000//100
-        mode2 = intcode[i]//1000
-        para1 = para2 = None
-        print()
-        print("index, value : ", i, intcode[i])
-        print("opcode, mode1, mode2 : ", opcode, mode1, mode2)
-        
-        if opcode == 99:
-            return
- 
-        # opcode operations
-        # add
-        elif opcode == 1:
-            print("add !")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            intcode[intcode[i+3]] = para1 + para2
-            i += 4
-        # multiply        
-        elif opcode == 2: 
-            print("multiply !")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            intcode[intcode[i+3]] = para1 * para2
-            i += 4
-        # store
-        elif opcode == 3:
-            print("store !")
-            para1 = intcode[i+1]
-            if i == 0:
-                intcode[intcode[i+1]] = _input 
-            i += 2
-        # print
-        elif opcode == 4:
-            para1 = intcode[intcode[i+1]]
-            print("Diag code = ",para1)
-            i += 2
-        # jump true
-        elif opcode == 5:
-            print("jump true !")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            if para1 != 0:
-                i = para2
-            else:
-                i += 3 
-        # jump false
-        elif opcode == 6:
-            print("jump false !")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            if para1 == 0:
-                i = para2
-            else:
-                i += 3
-        # less than
-        elif opcode == 7:
-            print("less than !")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            if para1 < para2:
-                intcode[intcode[i+3]] = 1
-            else:
-                intcode[intcode[i+3]] = 0
-            i += 4 
-        # equal
-        elif opcode == 8:
-            print("equal")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            if para1 == para2:
-                intcode[intcode[i+3]] = 1
-            else:
-                intcode[intcode[i+3]] = 0
-            i += 4
-
-        print("para1, para2 : ",para1, para2)
-        
-
-intcode = []
-
-with open(path+'/input', 'r') as f:
-    for l in f:
-        for i in l.split(','):
-            intcode.append(int(i))
-
-
-
-print(len(intcode))
-read_intcode(intcode, 5)
+    intcode = Intcode(data,5)
+    intcode.opRun()

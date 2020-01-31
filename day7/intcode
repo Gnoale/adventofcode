@@ -4,140 +4,187 @@ import os
 
 path = os.path.abspath('.') 
 
-def get_mode(tintcode, i, mode1, mode2):
-    # how args would be handled
-    # return the 2 first parameters value
-    if mode1 == 0:
-        p1 = tintcode[tintcode[i+1]]
-    elif mode1 == 1:
-        p1 = tintcode[i+1]
+class Intcode():
+
+    def __init__(self, data, start=None):
+        self.run = data.copy()  # the intcode list
+        self.start = start      # the first parameter
+        self.diag = 0           # used to return output value
+        self.phase = None
+        self.pointer = 0
+        self.opcode = None
+        self.para1 = None
+        self.para2 = None
+        self.mode1 = None
+        self.mode2 = None
+
+    def setOpmode(self):
+        # Instructions are potentially 5 digits integers (10000)
+        # Opcode is 2 last digits (DE)
+        # Mode1 (C) and Mode2 (B) are either 0 or 1, respectfully 3rd and 4th digits
+        # Example
+        # ABCDE
+        #  1002
+        opcodes = {
+            1:"add",
+            2:"mult",
+            3:"store",
+            4:"diag",
+            5:"jumpt",
+            6:"jumpf",
+            7:"less",
+            8:"equal",
+            99:"exit"
+        }
+        #print(self.pointer)
+        self.opcode = opcodes[self.run[self.pointer]%100]
+        self.mode1 = self.run[self.pointer]%1000//100
+        self.mode2 = self.run[self.pointer]//1000
+        # Mode 3 is not implemented yet
+
+    def setParameters(self):
+        if self.mode1 == 0:
+            self.para1 = self.run[self.run[self.pointer+1]]
+        elif self.mode1 == 1:
+            self.para1 = self.run[self.pointer+1]
+        if self.mode2 == 0:
+            self.para2 = self.run[self.run[self.pointer+2]]
+        elif self.mode2 == 1:
+            self.para2 = self.run[self.pointer+2]
+
+    def opAdd(self):
+        self.run[self.run[self.pointer+3]] = self.para1 + self.para2
+        self.pointer += 4
+
+    def opMult(self):
+        self.run[self.run[self.pointer+3]] = self.para1 * self.para2
+        self.pointer += 4
+
+    # first (and second) instruction 
+    # if the phase parameter is defined and the program just started we must use its value first
+    # then the value use will be either 0 if running on the first "amplifier"
+    # or equal to the latest output value
+    def opStore(self, output):
+        if self.phase is None:
+            self.run[self.run[self.pointer+1]] = self.start
+        elif self.pointer == 0:
+            self.run[self.run[self.pointer+1]] = self.phase
+        else:
+            self.run[self.run[self.pointer+1]] = output
+        self.pointer += 2
+
+    def opDiag(self):
+        self.diag = self.run[self.run[self.pointer+1]]
+        print("Diagnostic Code", self.diag)
+        self.pointer += 2
+
+    def opJumpf(self):
+        if self.para1 == 0:
+            self.pointer = self.para2
+        else:
+            self.pointer += 3
+
+    def opJumpt(self):
+        if self.para1 != 0:
+            self.pointer = self.para2
+        else:
+            self.pointer += 3
     
-    if mode2 == 0:
-        p2 = tintcode[tintcode[i+2]]
-    elif mode2 == 1:
-        p2 = tintcode[i+2]
- 
-    return p1, p2
+    def opLess(self):
+        if self.para1 < self.para2:
+            self.run[self.run[self.pointer+3]] = 1
+        else:
+            self.run[self.run[self.pointer+3]] = 0
+        self.pointer += 4  
+
+    def opEqual(self):
+        if self.para1 == self.para2:
+            self.run[self.run[self.pointer+3]] = 1
+        else:
+            self.run[self.run[self.pointer+3]] = 0
+        self.pointer += 4
+
+    # run the intcode
+    def opRun(self, output=0):
+        # These case doesn't use the parameters retrieval
+        nopara = ["store", "diag", "exit"]
+        while self.pointer < len(self.run):
+            self.setOpmode()
+            print(self.pointer, self.opcode)
+            # Avoid list index out of range exception
+            if self.opcode not in nopara:
+                self.setParameters()
+            if self.opcode == "add":
+                self.opAdd()
+            elif self.opcode == "mult":
+                self.opMult()
+            elif self.opcode == "store":
+                if self.phase is None:
+                    self.opStore()
+                else:
+                    self.opStore(output)
+            elif self.opcode == "diag":
+                self.opDiag()
+            elif self.opcode == "jumpt":
+                self.opJumpt()
+            elif self.opcode == "jumpf":
+                self.opJumpf()
+            elif self.opcode == "less":
+                self.opLess()
+            elif self.opcode == "equal":
+                self.opEqual()
+            elif self.opcode == "exit":
+                print(self.run)
+                print()
+                # output value
+                return self.diag
 
 
-def read_intcode(tintcode, phase, _input):
+if __name__=='__main__':
+    
+    data = []
+    with open(path+'/input', 'r') as f:
+        for l in f:
+            for i in l.split(','):
+                data.append(int(i))
 
-    i = 0
-    output = None
-    print("Input = {}".format(_input))
-    while i < len(tintcode):
-
-        opcode = tintcode[i]%100
-        mode1 = tintcode[i]%1000//100
-        mode2 = tintcode[i]//1000
-        para1 = para2 = None
-        print()
-        print("index, value : ", i, tintcode[i])
-        print("opcode, mode1, mode2 : ", opcode, mode1, mode2)
-        
-        if opcode == 99:
-            print(output)
-            return False
- 
-        # opcode operations
-        # add
-        elif opcode == 1:
-            print("add !")
-            para1, para2 = get_mode(tintcode, i, mode1, mode2)
-            tintcode[tintcode[i+3]] = para1 + para2
-            i += 4
-        # multiply        
-        elif opcode == 2: 
-            print("multiply !")
-            para1, para2 = get_mode(tintcode, i, mode1, mode2)
-            tintcode[tintcode[i+3]] = para1 * para2
-            i += 4
-        # store
-        elif opcode == 3:
-            print("store !")
-            para1 = tintcode[i+1]
-            if i == 0:
-                tintcode[tintcode[i+1]] = phase
-            else:
-                tintcode[tintcode[i+1]] = _input
-            i += 2
-        # print
-        elif opcode == 4:
-            para1 = tintcode[tintcode[i+1]]
-            print("Diag code = ",para1)
-            output = para1
-            return output
-        # jump true
-        elif opcode == 5:
-            print("jump true !")
-            para1, para2 = get_mode(tintcode, i, mode1, mode2)
-            if para1 != 0:
-                i = para2
-            else:
-                i += 3 
-        # jump false
-        elif opcode == 6:
-            print("jump false !")
-            para1, para2 = get_mode(tintcode, i, mode1, mode2)
-            if para1 == 0:
-                i = para2
-            else:
-                i += 3
-        # less than
-        elif opcode == 7:
-            print("less than !")
-            para1, para2 = get_mode(tintcode, i, mode1, mode2)
-            if para1 < para2:
-                tintcode[tintcode[i+3]] = 1
-            else:
-                tintcode[tintcode[i+3]] = 0
-            i += 4  
-        # equal
-        elif opcode == 8:
-            print("equal")
-            para1, para2 = get_mode(intcode, i, mode1, mode2)
-            if para1 == para2:
-                tintcode[tintcode[i+3]] = 1
-            else:
-                tintcode[tintcode[i+3]] = 0
-            i += 4
-
-        print("para1, para2 : ",para1, para2)
-        
-
-#intcode = [3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,
+    #data = [3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0]
+#    data = [3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,
 #1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0]
+    # 120 possibility N!
+    phases = [0,1,2,3,4] 
+    N = len(phases)
 
-intcode = []
-with open(path+'/input', 'r') as f:
-    for l in f:
-        for i in l.split(','):
-            intcode.append(int(i))
+    from itertools import permutations
 
+#    intcode = Intcode(data,5)
+#    print(data)
+#    intcode.opRun()
 
-# 120 possibility N!
-phases = [0,1,2,3,4] 
-N = len(phases)
+    m = {}
 
-from itertools import permutations
+    for permut in permutations(phases):
+        # (3, 1, 4, 2, 0)
+        # (3, 2, 0, 4, 1)
+        # ...
+        # first element handled separetly (default output value to 0)
+        worker = Intcode(data)
+        print(worker.run, permut[0], repr(worker))
+        worker.phase = permut[0]
+        output = worker.opRun()
+        for p in permut[1:]:
+            worker = Intcode(data)
+            print(worker.run, p, output, repr(worker))
+            worker.phase = p
+            output = worker.opRun(output)
+        # store current permutation and last oassociated output value 
+        m[permut] = output
+    
+    maximum = 0
+    permut = ()
 
-mout = 0
-m = {}
-versions : {}
-
-for p in permutations(phases):
-    # (3, 1, 4, 2, 0)
-    # (3, 2, 0, 4, 1)
-    i = 0
-    out = 0
-    while tintcode is not False:
-        versions[i] = intcode.copy()        
-        out = read_intcode(tintcode, p[i], out)
-        i += 1
-        if i == 5:
-            i = 0
-    if mout < out:
-        mout = out
-        m[p] = mout
-        
-print(m)
+    for k, v in m.items():
+        if v > maximum:
+            permut = k
+            maximum = v
+    print(permut, maximum)

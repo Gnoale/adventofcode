@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+
+# each row is 25 digits
+def get_layers(f,width,test=None):
+
+    digits = ""
+    if test == None:
+        with open(f, 'r') as finput:
+            digits = finput.read()
+    else:
+        digits = f
+    layers = []
+    # layers = 
+    #   [
+    #        [0,1,2,3...24],
+    #        ...
+    #   ]
+    line = []
+    w = 0
+    for i in range(len(digits)):
+        # reset new line each n steps (25) and append to layers
+        if w == width:
+            layers.append(line)
+            line = []
+            w = 0
+        try:
+            digit = int(digits[i])
+            line.append(digit)
+        except ValueError:
+            pass
+        w += 1
+    # do not forget the last line
+    if line:
+        layers.append(line)
+    return layers
+
+
+# given a list of layers, find the one having the most 0 occurence
+# a layer is 6 row height
+# when found, return the product of totals 1 and 2 digits in it
+def fewestzerodigits(layers):
+    fewzero = float('inf')
+    tfewzero = 0
+    # store 6*25 items
+    tlayer = []
+    product = []
+    # keep track of layers
+    # Annoying but since it begins at 0 
+        # how to set a proper tracking base on the index ?
+    lcount = 0
+    
+    for layer in layers:
+        # layer delimiter
+        # if tmax > max, store product 
+        if lcount == 6:
+            if tfewzero < fewzero:
+                fewzero = tfewzero
+                product = [0]*3
+                for d in tlayer:
+                    if d == 1:
+                        product[1] += 1
+                    if d == 2:
+                        product[2] += 1
+            # reset counter and layer values
+            tlayer = []
+            tfewzero = 0
+            lcount = 0
+
+        for digit in layer:            
+            # just count 0 
+            if digit == 0:
+                tfewzero += 1
+            # append all value to the current layer array
+            tlayer.append(digit)
+         
+        lcount += 1
+
+    return product[1]*product[2]
+
+def decode_image(layers,height,width):
+
+    final_layer = []
+    layer_count = 0
+    intermediate_layer = []
+
+    for layer in layers:
+        if layer_count == height:
+            print(final_layer,len(final_layer))
+            print(intermediate_layer,len(intermediate_layer),end="\n\n")
+            # first layer
+            if len(final_layer) == 0:
+                final_layer.extend(intermediate_layer)
+            else:
+                for i in range(len(intermediate_layer)):
+                    # existing layer digit is transparent, replace with the new layer's one
+                    if final_layer[i] == 2:
+                        final_layer[i] = intermediate_layer[i]
+            layer_count = 0
+            intermediate_layer = []
+
+        intermediate_layer.extend(layer)
+        layer_count += 1
+
+    # do not forget the last one
+    for i in range(len(intermediate_layer)):
+        # existing layer digit is transparent, replace with the new layer's one
+        if final_layer[i] == 2:
+            final_layer[i] = intermediate_layer[i]
+
+    print(final_layer, end="\n\n")
+    # print the image ?
+    w = 0
+    for i in range(len(final_layer)):
+        if w == width:
+#            print(final_layer[i])
+#        else:
+#            print(final_layer[i],end="")
+            if final_layer[i] == 0:
+                print(' ')
+            else:
+                print('#')
+            w = 0
+        else:
+            if final_layer[i] == 0:
+                print(' ',end="")
+            else:
+                print('#',end="")
+        w += 1
+    print()
+
+
+if __name__ == '__main__':
+
+    layers = get_layers('input',25)
+#    print(fewestzerodigits(layers))
+    final = decode_image(layers,6,25)
+#    test = [0,2,2,2,1,1,2,2,2,2,1,2,0,0,0,0]
+#    layers = get_layers(test,2,True)
+#    final = decode_image(layers,2,2)

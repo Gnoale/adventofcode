@@ -1,0 +1,179 @@
+#!/usr/bin/env python
+
+import os
+
+class Intcode():
+
+    def __init__(self, data, start=None):
+        self.run = data # the intcode list
+        self.start = start # the first parameter
+        self.pointer = 0
+        self.opcode = None
+        self.para1 = None
+        self.para2 = None
+        self.mode1 = None
+        self.mode2 = None
+        self.base = 0
+
+    def set_opmode(self):
+        # Instructions are potentially 5 digits integers (10000)
+        # Opcode is 2 last digits (DE)
+        # Mode1 (C) and Mode2 (B) are either 0 or 1, respectfully 3rd and 4th digits
+        # Example
+        # ABCDE
+        #  1002
+        opcodes = {
+            1:"add",
+            2:"mult",
+            3:"store",
+            4:"diag",
+            5:"jumpt",
+            6:"jumpf",
+            7:"less",
+            8:"equal",
+            9:"adjust",
+            99:"exit"
+        }
+        self.opcode = opcodes[self.run[self.pointer]%100]
+        self.mode1 = self.run[self.pointer]%1000//100
+        self.mode2 = self.run[self.pointer]//1000
+        # Mode 3 is not implemented yet
+   
+    # handle the cases wherer the value points to somewhere out of range]
+    def get_memory_location(self,pointer,mode=None):
+        if mode == 0:
+            try:
+                return self.run[self.run[pointer]]
+            except IndexError:
+                index = self.run[pointer] % len(self.run)
+                return self.run[index]
+        elif mode == 2:
+            try:
+                return self.run[self.run[pointer]+self.base]
+            except IndexError:
+                index = (self.run[pointer]+self.base) % len(self.run)
+                return self.run[index]
+        # here we need a pointer rather than the value itself
+        else:
+            try:
+                assert self.run[self.run[pointer]]
+            except IndexError:
+                index = self.run[pointer] % len(self.run)
+                return index
+            except AssertionError:
+                return self.run[pointer]
+
+
+    def set_parameters(self):
+        # 0 = position mode (default) = use the value stored at a given address 
+        # 1 = immediate mode = use the address as the value
+        # 2 = relative mode = same as position but relatively dependable of the base current value
+        if self.mode1 == 0:
+            self.para1 = self.get_memory_location(self.pointer+1,0)
+        elif self.mode1 == 1:
+            self.para1 = self.run[self.pointer+1]
+        elif self.mode1 == 2:
+            self.para1 = self.get_memory_location(self.pointer+1,2)
+
+        if self.mode2 == 0:
+            self.para2 = self.get_memory_location(self.pointer+2,0)
+        elif self.mode2 == 1:
+            self.para2 = self.run[self.pointer+2]
+        elif self.mode == 2:
+            self.para2 = self.get_memory_location(self.pointer+2,2)    
+    
+    def op_add(self):
+        pointer = self.get_memory_location(self.pointer+3)
+        self.run[pointer] =  self.para1 + self.para2
+        self.pointer += 4
+
+    def op_mult(self):
+        pointer = self.get_memory_location(self.pointer+3)
+        self.run[pointer] = self.para1 * self.para2
+        self.pointer += 4
+
+    def op_store(self):
+        self.run[self.run[self.pointer+1]] = self.start
+        self.pointer += 2
+
+    def op_diag(self):
+        print("Diagnostic Code",self.para1)
+        self.pointer += 2
+
+    def op_jumpf(self):
+        if self.para1 == 0:
+            self.pointer = self.para2
+        else:
+            self.pointer += 3
+
+    def op_jumpt(self):
+        if self.para1 != 0:
+            self.pointer = self.para2
+        else:
+            self.pointer += 3
+    
+    def op_less(self):
+        pointer = self.get_memory_location(self.pointer+3)
+        if self.para1 < self.para2:
+            self.run[pointer] = 1
+        else:
+            self.run[pointer] = 0
+        self.pointer += 4  
+
+    def op_equal(self):
+        pointer = self.get_memory_location(self.pointer+3)
+        if self.para1 == self.para2:
+            self.run[pointer] = 1
+        else:
+            self.run[pointer] = 0
+        self.pointer += 4
+    
+    def op_adjust(self):
+        self.base += self.para1
+        self.pointer += 2
+
+# run the intcode
+    def op_run(self):
+        # These case doesn't use the parameters retrieval
+        nopara = ["store","exit"]
+        while self.pointer < len(self.run):
+            self.set_opmode()
+            # Avoid list index out of range exception
+            if self.opcode not in nopara:
+                self.set_parameters()
+            if self.opcode == "add":
+                self.op_add()
+            elif self.opcode == "mult":
+                self.op_mult()
+            elif self.opcode == "store":
+                self.op_store()
+            elif self.opcode == "diag":
+                self.op_diag()
+            elif self.opcode == "jumpt":
+                self.op_jumpt()
+            elif self.opcode == "jumpf":
+                self.op_jumpf()
+            elif self.opcode == "less":
+                self.op_less()
+            elif self.opcode == "equal":
+                self.op_equal()
+            elif self.opcode == "adjust":
+                self.op_adjust()
+            elif self.opcode == "exit":
+                return
+            print("opcode",self.opcode)
+            print(self.run)
+            print("p",self.pointer,"base",self.base,"para1",self.para1,"mode1",self.mode1,end="\n\n")
+
+if __name__=='__main__':
+    
+    path = os.path.abspath('.') 
+    data = []
+    with open(path+'/input', 'r') as f:
+        for l in f:
+            for i in l.split(','):
+                data.append(int(i))
+
+    data = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+    intcode = Intcode(data)
+    intcode.op_run()

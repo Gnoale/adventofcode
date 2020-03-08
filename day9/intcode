@@ -11,14 +11,16 @@ class Intcode():
         self.opcode = None
         self.para1 = None
         self.para2 = None
+        self.para3 = None
         self.mode1 = None
         self.mode2 = None
+        self.mode3 = None
         self.base = 0
 
     def set_opmode(self):
         # Instructions are potentially 5 digits integers (10000)
         # Opcode is 2 last digits (DE)
-        # Mode1 (C) and Mode2 (B) are either 0 or 1, respectfully 3rd and 4th digits
+        # Mode1 (C) and Mode2 (B) are either 0,1 or 2, respectfully 3rd and 4th digits
         # Example
         # ABCDE
         #  1002
@@ -37,29 +39,35 @@ class Intcode():
         self.opcode = opcodes[self.run[self.pointer]%100]
         self.mode1 = self.run[self.pointer]%1000//100
         self.mode2 = self.run[self.pointer]//1000
-        # Mode 3 is not implemented yet
-   
-    # handle the cases wherer the value points to somewhere out of range]
-    def get_memory_location(self,pointer,mode=None):
-        if mode == 0:
-            try:
-                return self.run[self.run[pointer]]
-            except IndexError:
-                index = self.run[pointer] % len(self.run)
-                return self.run[index]
-        elif mode == 2:
-            try:
-                return self.run[self.run[pointer]+self.base]
-            except IndexError:
-                index = (self.run[pointer]+self.base) % len(self.run)
-                return self.run[index]
-        # here we need a pointer rather than the value itself
+        self.mode2 = self.run[self.pointer]//1000
+        self.mode3 = self.run[self.pointer]//10000
+
+    # This func handle the cases where the value points to somewhere out of range]
+    def get_memory_location(self,pointer,mode=None,p=False):
+        # return the values the pointer points to
+        if p is False:
+             if mode == 0:
+                 try:
+                     return self.run[self.run[pointer]]
+                 except IndexError:
+                     index = self.run[pointer] % len(self.run)
+                     return self.run[index]
+             elif mode == 2:
+                 try:
+                     return self.run[self.run[pointer]+self.base]
+                 except IndexError:
+                     index = (self.run[pointer]+self.base) % len(self.run)
+                     return self.run[index]
+        # return the pointer where to store the result
         else:
             try:
+                # need to evaluate the location
                 assert self.run[self.run[pointer]]
+                return self.run[pointer]
             except IndexError:
                 index = self.run[pointer] % len(self.run)
                 return index
+            # assert fail when the value evaluated is 0
             except AssertionError:
                 return self.run[pointer]
 
@@ -79,16 +87,23 @@ class Intcode():
             self.para2 = self.get_memory_location(self.pointer+2,0)
         elif self.mode2 == 1:
             self.para2 = self.run[self.pointer+2]
-        elif self.mode == 2:
+        elif self.mode2 == 2:
             self.para2 = self.get_memory_location(self.pointer+2,2)    
-    
+ 
+        if self.mode3 == 0:
+            self.para3 = self.get_memory_location(self.pointer+3,0,True)
+        elif self.mode3 == 2:
+            self.para3 = self.get_memory_location(self.pointer+3,2,True)    
+   
     def op_add(self):
-        pointer = self.get_memory_location(self.pointer+3)
+        #pointer = self.get_memory_location(self.pointer+3)
+        pointer = self.para3
         self.run[pointer] =  self.para1 + self.para2
         self.pointer += 4
 
     def op_mult(self):
-        pointer = self.get_memory_location(self.pointer+3)
+        #pointer = self.get_memory_location(self.pointer+3)
+        pointer = self.para3
         self.run[pointer] = self.para1 * self.para2
         self.pointer += 4
 
@@ -113,7 +128,8 @@ class Intcode():
             self.pointer += 3
     
     def op_less(self):
-        pointer = self.get_memory_location(self.pointer+3)
+        #pointer = self.get_memory_location(self.pointer+3)
+        pointer = self.para3
         if self.para1 < self.para2:
             self.run[pointer] = 1
         else:
@@ -121,7 +137,8 @@ class Intcode():
         self.pointer += 4  
 
     def op_equal(self):
-        pointer = self.get_memory_location(self.pointer+3)
+        #pointer = self.get_memory_location(self.pointer+3)
+        pointer = self.para3
         if self.para1 == self.para2:
             self.run[pointer] = 1
         else:
@@ -137,6 +154,8 @@ class Intcode():
         # These case doesn't use the parameters retrieval
         nopara = ["store","exit"]
         while self.pointer < len(self.run):
+            print(self.run)
+            print("p",self.pointer,"base",self.base,"value",self.run[self.pointer])
             self.set_opmode()
             # Avoid list index out of range exception
             if self.opcode not in nopara:
@@ -162,8 +181,9 @@ class Intcode():
             elif self.opcode == "exit":
                 return
             print("opcode",self.opcode)
-            print(self.run)
-            print("p",self.pointer,"base",self.base,"para1",self.para1,"mode1",self.mode1,end="\n\n")
+            print("p",self.pointer,"base",self.base,"para1",self.para1,\
+                   "para2", self.para2,"para3", self.para3,"mode1",self.mode1,\
+                   "mode2",self.para2,"mode3",self.para3,end="\n\n")
 
 if __name__=='__main__':
     
@@ -175,5 +195,6 @@ if __name__=='__main__':
                 data.append(int(i))
 
     data = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
-    intcode = Intcode(data)
+    #data = [1102,34915192,34915192,7,4,7,99,0]
+    intcode = Intcode(data,1)
     intcode.op_run()

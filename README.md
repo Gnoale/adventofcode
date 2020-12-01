@@ -1,3 +1,3 @@
-# aoc2019
+# Advent of code
 
-My solutions to [aoc2019](https://adventofcode.com/2019/), a great coding game.
+My solutions to [aoc](https://adventofcode.com/), a great coding game.

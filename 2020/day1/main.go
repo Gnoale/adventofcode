@@ -8,10 +8,25 @@ import (
 	"strconv"
 )
 
-func main() {
+func findProductNaive(s []int) int {
+	for i, _ := range s {
+		t := s[i]
+		for j := i; s[j] < (2020 - t); j++ {
+			u := s[j]
+			for k := j; s[k] <= (2020 - t - u); k++ {
+				if (t + u + s[k]) == 2020 {
+					fmt.Println(t, u, s[k])
+					return (t * u * s[k])
+				}
+			}
+		}
+	}
+	return 0
+}
 
-	f, _ := os.Open("input")
-	s := bufio.NewScanner(f)
+func getInput(f string) []int {
+	fd, _ := os.Open(f)
+	s := bufio.NewScanner(fd)
 
 	codes := make([]int, 0)
 	//s.Split(bufio.ScanLines)
@@ -19,20 +34,16 @@ func main() {
 		c, _ := strconv.Atoi(s.Text())
 		codes = append(codes, c)
 	}
-
 	sort.Ints(codes)
+	return codes
 
-	for i, _ := range codes {
-		t := codes[i]
-		for j := i; codes[j] < (2020 - t); j++ {
-			u := codes[j]
-			for k := j; codes[k] <= (2020 - t - u); k++ {
-				if (t + u + codes[k]) == 2020 {
-					fmt.Println(t, u, codes[k])
-					fmt.Println(t * u * codes[k])
-				}
-			}
-		}
-	}
+}
+
+func main() {
+
+	codes := getInput("input")
+
+	r := findProductNaive(codes)
+	fmt.Println(r)
 
 }

@@ -42,7 +42,6 @@ func findPart2Comply(plist []string) int {
 				if i+1 == fst || i+1 == sec {
 					m += 1
 				}
-
 			}
 		}
 		if m == 1 {

@@ -4,7 +4,7 @@ import (
 	"github.com/Gnoale/adventofcode/puzzlein"
 )
 
-func findProductNaive(s []int) int {
+func findProductN(s []int) int {
 	for i, t := range s {
 		for j := i; s[j] < (2020-t) && j < len(s)-1; j++ {
 			u := s[j]
@@ -18,21 +18,35 @@ func findProductNaive(s []int) int {
 	return 0
 }
 
-func findProductRecurse(s []int) int {
+func findProductNr(s []int) int {
 	l := len(s)
 	if l == 1 {
 		return 0
 	}
 	L := s[:l/2]
 	R := s[l/2:]
-	if r := findProductNaive(L); r != 0 {
+	if r := findProductN(L); r != 0 {
 		return r
 	}
-	if r := findProductNaive(R); r != 0 {
+	if r := findProductN(R); r != 0 {
 		return r
 	}
-	findProductRecurse(L)
-	findProductRecurse(R)
+	findProductNr(L)
+	findProductNr(R)
+	return 0
+}
+
+func findProductNn(s []int) int {
+	for i, t := range s {
+		for j := i; j < len(s)-1; j++ {
+			u := s[j]
+			for k := j; k < len(s)-1; k++ {
+				if (t + u + s[k]) == 2020 {
+					return (t * u * s[k])
+				}
+			}
+		}
+	}
 	return 0
 }
 
@@ -43,9 +57,9 @@ func main() {
 		panic(err)
 	}
 
-	//r := findProductNaive(codes)
+	//r := findProductN(codes)
 	//fmt.Println(r)
 
-	findProductRecurse(codes)
+	findProductNr(codes)
 
 }

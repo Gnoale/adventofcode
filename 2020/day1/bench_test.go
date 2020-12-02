@@ -17,12 +17,18 @@ func init() {
 
 func BenchmarkFpn(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		findProductNaive(codes)
+		findProductN(codes)
 	}
 }
 
 func BenchmarkFpr(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		findProductRecurse(codes)
+		findProductNr(codes)
+	}
+}
+
+func BenchmarkFpNn(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		findProductNn(codes)
 	}
 }

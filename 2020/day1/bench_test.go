@@ -1,21 +1,27 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Gnoale/adventofcode/puzzlein"
+)
 
 var codes []int
 
 func init() {
-	codes = getInput("input")
-
+	var err error
+	if codes, err = puzzlein.GetInt("input"); err != nil {
+		panic(err)
+	}
 }
 
-func BenchmarkfindProductNaive(b *testing.B) {
+func BenchmarkFpn(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		findProductNaive(codes)
 	}
 }
 
-func BenchmarkfindProductRecurse(b *testing.B) {
+func BenchmarkFpr(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		findProductRecurse(codes)
 	}

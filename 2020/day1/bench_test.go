@@ -2,8 +2,21 @@ package main
 
 import "testing"
 
-func BenchmarkfindProductNaive(b *testing.B) {
-	codes := getInput("input")
-	findProductNaive(codes)
+var codes []int
 
+func init() {
+	codes = getInput("input")
+
+}
+
+func BenchmarkfindProductNaive(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		findProductNaive(codes)
+	}
+}
+
+func BenchmarkfindProductRecurse(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		findProductRecurse(codes)
+	}
 }

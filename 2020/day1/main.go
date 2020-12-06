@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/Gnoale/adventofcode/puzzlein"
 )
 
@@ -60,6 +62,7 @@ func main() {
 	//r := findProductN(codes)
 	//fmt.Println(r)
 
-	findProductNr(codes)
+	r := findProductNr(codes)
+	fmt.Println(r)
 
 }

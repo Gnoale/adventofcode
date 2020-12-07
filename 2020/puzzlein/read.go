@@ -88,3 +88,41 @@ func Clean(p []string) [][]string {
 	}
 	return new
 }
+
+func BuildBagmap(bags []string) map[string][]map[string]int {
+	m := make(map[string][]map[string]int)
+	for _, line := range bags {
+		sl := strings.Split(line, ",")  // sl = ["muted white bags contain 4 dark orange bags" "3 bright white bags."]
+		s := strings.Split(sl[0], " ")  // s = ["muted" "white" "bags" "contain" ...]
+		key := strings.Join(s[:2], " ") // key = "muted white"
+		num, _ := strconv.Atoi(s[4])
+		v := map[string]int{strings.Join(s[5:7], " "): num} // v = map["dark orange":4]
+		m[key] = append(m[key], v)                          // m["mute dwhite"] = [map["dark orange"]:4]
+
+		for i := 1; i < len(sl); i++ {
+			s = strings.Split(sl[i], " ") // s = ["3", "bright", "white"...]
+			num, _ := strconv.Atoi(s[1])
+			v = map[string]int{strings.Join(s[2:4], " "): num}
+			m[key] = append(m[key], v) // m["muted white"] = [map["dark orange"]:4 map["bright white"]:3]
+		}
+	}
+	return m
+}
+
+func BuildSimpleBagmap(bags []string) map[string][]string {
+	m := make(map[string][]string)
+	for _, line := range bags {
+		sl := strings.Split(line, ",")  // sl = ["muted white bags contain 4 dark orange bags" "3 bright white bags."]
+		s := strings.Split(sl[0], " ")  // s = ["muted" "white" "bags" "contain" ...]
+		key := strings.Join(s[:2], " ") // key = "muted white"
+		v := strings.Join(s[5:7], " ")  // v = "dark orange"
+		m[key] = append(m[key], v)      // m["mute dwhite"] = ["dark orange"]
+
+		for i := 1; i < len(sl); i++ {
+			s = strings.Split(sl[i], " ") // s = ["3", "bright", "white"...]
+			v = strings.Join(s[2:4], " ")
+			m[key] = append(m[key], v) // m["muted white"] = ["dark orange", "bright white"]
+		}
+	}
+	return m
+}

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/Gnoale/adventofcode/graph"
 	"github.com/Gnoale/adventofcode/puzzlein"
 )
 
@@ -22,14 +21,27 @@ func findAncestor(color string, ancestor map[string]int) {
 	}
 }
 
-func findChildbag(color string, childbag map[string]int, graph map[string]int) {
+func findChildbag(color string, childbag map[string]int) {
 	for _, child := range bagMap[color] {
 		for c, v := range child {
 			if c != "other bags." {
-				if graph[color] < graph[c] {
-					childbag[c] += childbag[color] * v
-				}
-				findChildbag(c, childbag, graph)
+				childbag[c] += childbag[color] * v
+				findChildbag(c, childbag)
+			}
+		}
+	}
+}
+
+func countColors(color string, index, previous int, count *int) {
+
+	for _, colormap := range bagMap[color] { // [ map1[c1:n1], map2[c2:n2]..]
+		for next, n := range colormap { // c1,n1 c2,n2
+			if next != "other bags." {
+				fmt.Printf("color = %v, next = %v, n = %v, index = %v\n", color, next, n, index)
+				val := index * n * previous
+				*count += val
+				fmt.Printf("count = %v, current val = %v\n\n", *count, val)
+				countColors(next, n, previous, count)
 			}
 		}
 	}
@@ -37,7 +49,7 @@ func findChildbag(color string, childbag map[string]int, graph map[string]int) {
 
 func main() {
 
-	b, err := puzzlein.GetStr("./day7/inputest")
+	b, err := puzzlein.GetStr("./day7/inputest2")
 	if err != nil {
 		panic(err)
 	}
@@ -53,8 +65,7 @@ func main() {
 	root := "shiny gold"
 	childbag := make(map[string]int)
 	childbag[root] = 1
-	visited := graph.Bfs(root, bagMap)
-	findChildbag(root, childbag, visited)
+	findChildbag(root, childbag)
 
 	total := 0
 	for k, v := range childbag {
@@ -64,7 +75,10 @@ func main() {
 	}
 	fmt.Println(total)
 	fmt.Printf("%v\n\n", childbag)
+	//fmt.Println(visited)
 
-	fmt.Println(visited)
+	var count int
+	countColors(root, 1, 1, &count)
+	fmt.Println(count)
 
 }

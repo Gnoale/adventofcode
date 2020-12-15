@@ -6,7 +6,51 @@ import (
 	"github.com/Gnoale/adventofcode/puzzlein"
 )
 
+type vertex struct {
+	color string
+	count int
+	previous *node
+	right *node
+	left *node
+}
+
+type graph struct {
+	[]*node
+}
+
+
+func (g *graph)populate (bags []string) {
+	for _, line := range bags {
+		sl := strings.Split(line, ",")  // sl = ["muted white bags contain 4 dark orange bags" "3 bright white bags."]
+		s := strings.Split(sl[0], " ")  // s = ["muted" "white" "bags" "contain" ...]
+		key := strings.Join(s[:2], " ") // key = "muted white"
+		num, _ := strconv.Atoi(s[4])
+		n := &node{key, }
+
+
+		v := map[string]int{strings.Join(s[5:7], " "): num} // v = map["dark orange":4]
+		m[key] = append(m[key], v)                          // m["mute dwhite"] = [map["dark orange"]:4]
+
+		for i := 1; i < len(sl); i++ {
+			s = strings.Split(sl[i], " ") // s = ["3", "bright", "white"...]
+			num, _ := strconv.Atoi(s[1])
+			v = map[string]int{strings.Join(s[2:4], " "): num}
+			m[key] = append(m[key], v) // m["muted white"] = [map["dark orange"]:4 map["bright white"]:3]
+		}
+	}
+	return m
+}
+func (g *graph)traverse (start string) {
+	
+
+
+}
+
+
+
+
 var bagMap map[string][]map[string]int
+
 
 func findAncestor(color string, ancestor map[string]int) {
 	for parent, childs := range bagMap {
@@ -32,24 +76,9 @@ func findChildbag(color string, childbag map[string]int) {
 	}
 }
 
-func countColors(color string, index, previous int, count *int) {
-
-	for _, colormap := range bagMap[color] { // [ map1[c1:n1], map2[c2:n2]..]
-		for next, n := range colormap { // c1,n1 c2,n2
-			if next != "other bags." {
-				fmt.Printf("color = %v, next = %v, n = %v, index = %v\n", color, next, n, index)
-				val := index * n * previous
-				*count += val
-				fmt.Printf("count = %v, current val = %v\n\n", *count, val)
-				countColors(next, n, previous, count)
-			}
-		}
-	}
-}
-
 func main() {
 
-	b, err := puzzlein.GetStr("./day7/inputest2")
+	b, err := puzzlein.GetStr("./day7/input")
 	if err != nil {
 		panic(err)
 	}
@@ -75,10 +104,5 @@ func main() {
 	}
 	fmt.Println(total)
 	fmt.Printf("%v\n\n", childbag)
-	//fmt.Println(visited)
-
-	var count int
-	countColors(root, 1, 1, &count)
-	fmt.Println(count)
 
 }
